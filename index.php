@@ -1,10 +1,4 @@
 <?php
-/*$myArray = ['elem1', 'elem2', 'elem3', 'elem4', 'elem5'];
-
-var_dump(array_slice($myArray, 1, 2));
-*/
-
-
 require_once __DIR__.'/config.php';
 
 // Sécurise le cookie de session avec httponly
@@ -26,8 +20,6 @@ use App\Entity\User;
 
 $controller = new Controller();
 $controller->route();
-
-
 
 
 ?>

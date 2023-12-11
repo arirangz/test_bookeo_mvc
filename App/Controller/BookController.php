@@ -31,7 +31,6 @@ class BookController extends Controller
                         $this->edit();
                         break;
                     case 'delete':
-                        // Appeler méthode delete()
                         $this->delete();
                         break;
                     case 'list':
@@ -62,68 +61,42 @@ class BookController extends Controller
             if (isset($_GET['id'])) {
 
                 $id = (int)$_GET['id'];
-                // Charger le livre par un appel au repository
+                // Charger le livre par un appel au repository findOneById
                 $bookRepository = new BookRepository();
                 $book = $bookRepository->findOneById($id);
 
                 if ($book) {
-                    // Préparation de l'objet commentaire pour le formulaire
-                    $commentRepository = new CommentRepository();
-                    $comment = new Comment();
-                    $comment->setBookId($book->getId());
-                    $comment->setUserId(User::getCurrentUserId());
+                    //@todo créer une nouvelle instance de CommentRepository
+                    //@todo Créer une nouvelle instance de commentaire en settant le book id et l'id de l'utilisateur connecté (User::getCurrentUserId())
+                    // $comment
+
+
                     if (isset($_POST['saveComment'])) {
                         if (!User::isLogged()) {
                             throw new \Exception("Accès refusé");
                         }
+                        //@todo appeler la méthode hydrate du l'objet comment en passant le tableau $_POST
 
-                        $comment->hydrate($_POST);
-                        $errors = $comment->validate();
+                        //@todo verifier que le commentaire est valide en appelant la commande validate
 
+                        
                         if (empty($errors)) {
-                            $commentRepository->persist($comment);
-                            // on remet le commentaire vide pour l'ajout d'un commentaire
-                            $comment = new Comment();
+                            // @todo si il n'y a pas d'erreur, alors appeler la méthode persist de l'objet commentRepository en passant $comment
+                            
                         }
                     }
 
-                    // Préparation de l'objet Rating pour le formulaire
-                    $ratingRepository = new RatingRepository();
-                    // On récupère si une note a déja été posté par l'utilisateur
-                    $rating = $ratingRepository->findOneByBookIdAndUserId($book->getId(), User::getCurrentUserId());
-                    if (!$rating) {
-                        $rating = new Rating();
-                    }
-                    $rating->setBookId($book->getId());
-                    $rating->setUserId(User::getCurrentUserId());
-                    if (isset($_POST['saveRating'])) {
-                        if (!User::isLogged()) {
-                            throw new \Exception("Accès refusé");
-                        }
+                    // @todo récupérer les commentaires existants
+                    
 
-                        $rating->hydrate($_POST);
-                        $errors = $rating->validate();
-
-                        if (empty($errors)) {
-                            $ratingRepository->persist($rating);
-                        }
-                    }
-
-
-                    // Récupéartion de la moyenne des notes
-                    $averageRate = $ratingRepository->findAverageByBookId($book->getId());
-
-                    // Récupération des commentaires existants
-                    $commentRepository = new CommentRepository();
-                    $comments = $commentRepository->findAllByBookId($book->getId());
-
+                    //@todo remplacer petit à petit les valeurs 
                     $this->render('book/show', [
                         'book' => $book,
-                        'comments' => $comments,
-                        'newComment' => $comment,
-                        'rating' => $rating,
-                        'averageRate' => $averageRate,
-                        'errors' => $errors,
+                        'comments' => '',
+                        'newComment' => '',
+                        'rating' => '',
+                        'averageRate' => '',
+                        'errors' => '',
                     ]);
                 } else {
                     $this->render('errors/default', [
@@ -170,46 +143,50 @@ class BookController extends Controller
             }
             $bookRepository = new BookRepository();
             $errors = [];
+            // Si on a pas d'id on est dans le cas d'une création
             if (is_null($id)) {
                 $book = new Book();
             } else {
+                // Si on a un id, il faut récupérer le livre
                 $book = $bookRepository->findOneById($id);
                 if (!$book) {
                     throw new \Exception("Le livre n'existe pas");
                 }
             }
 
-            // Récupération des types
-            $typeRepository = new TypeRepository;
-            $types = $typeRepository->findAll();
+            // @todo Récupération des types
+            
 
-            // Récupération des auteurs
-            $authorRepository = new AuthorRepository;
-            $authors = $authorRepository->findAll();
+            // @todo Récupération des auteurs
+        
 
             if (isset($_POST['saveBook'])) {
-                $book->hydrate($_POST);
-                $errors = $book->validate();
+                //@todo envoyer les données post à la méthode hydrate de l'objet $book
+                
 
+                //@todo appeler la méthode validate de l'objet book pour récupérer les erreurs (titre vide)
+                
 
+                // Si pas d'erreur on peut traiter l'upload de fichier
                 if (empty($errors)) {
                     $fileErrors = [];
                     // On lance l'upload de fichier
                     if (isset($_FILES['file']['tmp_name']) && $_FILES['file']['tmp_name'] !== '') {
-                        $res = FileTools::uploadImage(_BOOKS_IMAGES_FOLDER_, $_FILES['file'], $_POST['image']);
+                        //@todo appeler la méthode static uploadImage de la classe FileTools et stocker le résultat dans $res
+                        
                         if (empty($res['errors'])) {
-                            $book->setImage($res['fileName']);
+                            //@todo décommenter cette ligne
+                            //$book->setImage($res['fileName']);
                         } else {
                             $fileErrors = $res['errors'];
                         }
                     }
                     if (empty($fileErrors)) {
-                        // on lance le save
+                        // @todo si pas d'erreur alors on appelle persit de bookRepository en passant $book
 
-                        $book = $bookRepository->persist($book);
 
-                        // On redirige vers la page du livre
-                        header('location: index.php?controller=book&action=show&id=' . $book->getId());
+                        // @todo On redirige vers la page du livre (avec header location)
+                        
                     } else {
                         $errors = array_merge($errors, $fileErrors);
                     }
@@ -218,10 +195,10 @@ class BookController extends Controller
 
             $this->render('book/add_edit', [
                 'book' => $book,
-                'types' => $types,
-                'authors' => $authors,
+                'types' => '',
+                'authors' => '',
                 'pageTitle' => 'Ajouter un livre',
-                'errors' => $errors
+                'errors' => ''
             ]);
         } catch (\Exception $e) {
             $this->render('errors/default', [
@@ -235,20 +212,24 @@ class BookController extends Controller
 
         $bookRepository = new BookRepository;
 
+        // On récupère la page courante, si page de page on met à 1
         if (isset($_GET['page'])) {
             $page = (int)$_GET['page'];
         } else {
             $page = 1;
         }
-        $books = $bookRepository->findAll(_ITEM_PER_PAGE_, $page);
-        $totalBooks = $bookRepository->count();
-        $totalPages = ceil($totalBooks / _ITEM_PER_PAGE_);
+
+        //@todo récupérer les tous les livres (avec pagination plus tard)
+
+        //@todo pour la pagination, on a besoin de connaitre le nombre total de livres
+
+        //@todo pour la pagination on a besoin de connaitre le nombre de pages
 
 
         $this->render('book/list', [
-            'books' => $books,
-            'totalPages' => $totalPages,
-            'page' => $page,
+            'books' => '',
+            'totalPages' => '',
+            'page' => '',
         ]);
     }
 

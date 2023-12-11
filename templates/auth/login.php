@@ -1,4 +1,4 @@
-<?php require_once _TEMPLATEPATH_ . '\header.php'; ?>
+<?php require_once _TEMPLATEPATH_ . '/header.php'; ?>
 
 
 <h1>Login</h1>
@@ -24,4 +24,4 @@
 
 </form>
 
-<?php require_once _TEMPLATEPATH_ . '\footer.php'; ?>
+<?php require_once _TEMPLATEPATH_ . '/footer.php'; ?>
